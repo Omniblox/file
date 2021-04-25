@@ -164,6 +164,7 @@ export default class ImageTool {
      * Set saved state
      */
     this._data = { id: data.id };
+    this._id = data.id;
     this.data = data;
   }
 
@@ -175,7 +176,9 @@ export default class ImageTool {
    * @returns {HTMLDivElement}
    */
   render() {
-    return this.ui.render(this.data);
+    let div = this.ui.render(this.data);
+    div.id = this._id;
+    return div;
   }
 
   /**
