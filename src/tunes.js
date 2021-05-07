@@ -1,7 +1,7 @@
-import { make } from "./ui";
-import bgIcon from "./svg/background.svg";
-import borderIcon from "./svg/border.svg";
-import stretchedIcon from "./svg/stretched.svg";
+import { make } from './ui';
+import bgIcon from './svg/background.svg';
+import borderIcon from './svg/border.svg';
+import stretchedIcon from './svg/stretched.svg';
 
 /**
  * Working with Block Tunes
@@ -28,19 +28,19 @@ export default class Tunes {
   static get tunes() {
     return [
       {
-        name: "withBorder",
+        name: 'withBorder',
         icon: borderIcon,
-        title: "With border",
+        title: 'With border',
       },
       {
-        name: "stretched",
+        name: 'stretched',
         icon: stretchedIcon,
-        title: "Stretch image",
+        title: 'Stretch image',
       },
       {
-        name: "withBackground",
+        name: 'withBackground',
         icon: bgIcon,
-        title: "With background",
+        title: 'With background',
       },
     ];
   }
@@ -52,9 +52,9 @@ export default class Tunes {
    */
   get CSS() {
     return {
-      wrapper: "",
+      wrapper: '',
       buttonBase: this.api.styles.settingsButton,
-      button: "image-tool__tune",
+      button: 'image-tool__tune',
       buttonActive: this.api.styles.settingsButtonActive,
     };
   }
@@ -66,7 +66,7 @@ export default class Tunes {
    * @returns {Element}
    */
   render(toolData) {
-    const wrapper = make("div", this.CSS.wrapper);
+    const wrapper = make('div', this.CSS.wrapper);
 
     this.buttons = [];
 
@@ -74,12 +74,12 @@ export default class Tunes {
 
     tunes.forEach((tune) => {
       const title = this.api.i18n.t(tune.title);
-      const el = make("div", [this.CSS.buttonBase, this.CSS.button], {
+      const el = make('div', [this.CSS.buttonBase, this.CSS.button], {
         innerHTML: tune.icon,
         title,
       });
 
-      el.addEventListener("click", () => {
+      el.addEventListener('click', () => {
         this.tuneClicked(tune.name, tune.action);
       });
 
@@ -89,7 +89,7 @@ export default class Tunes {
       this.buttons.push(el);
 
       this.api.tooltip.onHover(el, title, {
-        placement: "top",
+        placement: 'top',
       });
 
       wrapper.appendChild(el);
@@ -105,7 +105,7 @@ export default class Tunes {
    * @param {Function} customFunction - function to execute on click
    */
   tuneClicked(tuneName, customFunction) {
-    if (typeof customFunction === "function") {
+    if (typeof customFunction === 'function') {
       if (!customFunction(tuneName)) {
         return false;
       }
