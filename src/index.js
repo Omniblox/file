@@ -20,7 +20,7 @@
  * It will expose 8008 port, so you can pass http://localhost:8008 with the Tools config:
  *
  * image: {
- *   class: ImageTool,
+ *   class: FileTool,
  *   config: {
  *     endpoints: {
  *       byFile: 'http://localhost:8008/uploadFile',
@@ -31,7 +31,7 @@
  */
 
 /**
- * @typedef {object} ImageToolData
+ * @typedef {object} FileToolData
  * @description Image Tool's input and output data format
  * @property {string} caption — image caption
  * @property {boolean} withBorder - should image be rendered with border
@@ -74,7 +74,7 @@ import Uploader from "./uploader";
  *                           also can contain any additional data that will be saved and passed back
  * @property {string} file.url - [Required] image source URL
  */
-export default class ImageTool {
+export default class FileTool {
   /**
    * Notify core that read-only mode is supported
    *
@@ -100,7 +100,7 @@ export default class ImageTool {
 
   /**
    * @param {object} tool - tool properties got from editor.js
-   * @param {ImageToolData} tool.data - previously saved data
+   * @param {FileToolData} tool.data - previously saved data
    * @param {ImageConfig} tool.config - user config for Tool
    * @param {object} tool.api - Editor.js API
    * @param {boolean} tool.readOnly - read-only mode flag
@@ -186,7 +186,7 @@ export default class ImageTool {
    *
    * @public
    *
-   * @returns {ImageToolData}
+   * @returns {FileToolData}
    */
   save() {
     const caption = this.ui.nodes.caption;
@@ -297,7 +297,7 @@ export default class ImageTool {
    *
    * @private
    *
-   * @param {ImageToolData} data - data in Image Tool format
+   * @param {FileToolData} data - data in Image Tool format
    */
   set data(data) {
     this.image = data.file;
@@ -322,7 +322,7 @@ export default class ImageTool {
    *
    * @private
    *
-   * @returns {ImageToolData}
+   * @returns {FileToolData}
    */
   get data() {
     return this._data;
