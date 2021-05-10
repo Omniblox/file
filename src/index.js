@@ -116,7 +116,7 @@ export default class FileTool {
       additionalRequestData: config.additionalRequestData || {},
       additionalRequestHeaders: config.additionalRequestHeaders || {},
       field: config.field || 'image',
-      types: config.types || 'image/*',
+      types: config.types || '*/*',
       captionPlaceholder: this.api.i18n.t(
         config.captionPlaceholder || 'Caption'
       ),
