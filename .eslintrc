@@ -4,5 +4,8 @@
     "fetch": true,
     "ImageConfig": true,
     "FileToolData": true
+  },
+  "rules": {
+    "array-bracket-spacing": 0
   }
 }

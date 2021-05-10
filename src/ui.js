@@ -21,11 +21,13 @@ export default class Ui {
     this.readOnly = readOnly;
     this.nodes = {
       wrapper: make('div', [this.CSS.baseClass, this.CSS.wrapper]),
-      imageContainer: make('div', [this.CSS.imageContainer]),
+
       fileButton: this.createFileButton(),
-      imageEl: undefined,
-      imagePreloader: make('div', this.CSS.imagePreloader),
       caption: make('div', [this.CSS.input, this.CSS.caption], {
+        contentEditable: !this.readOnly,
+      }),
+
+      fileLink: make('div', [this.CSS.fileLink], {
         contentEditable: !this.readOnly,
       }),
     };
@@ -41,10 +43,11 @@ export default class Ui {
      *  </wrapper>
      */
     this.nodes.caption.dataset.placeholder = this.config.captionPlaceholder;
-    this.nodes.imageContainer.appendChild(this.nodes.imagePreloader);
-    this.nodes.wrapper.appendChild(this.nodes.imageContainer);
+    this.nodes.fileLink.dataset.placeholder = 'FileLink'; //this.config.captionPlaceholder;
+
     this.nodes.wrapper.appendChild(this.nodes.caption);
     this.nodes.wrapper.appendChild(this.nodes.fileButton);
+    this.nodes.wrapper.appendChild(this.nodes.fileLink);
   }
 
   /**
@@ -62,27 +65,12 @@ export default class Ui {
       /**
        * Tool's classes
        */
-      wrapper: 'image-tool',
-      imageContainer: 'image-tool__image',
-      imagePreloader: 'image-tool__image-preloader',
-      imageEl: 'image-tool__image-picture',
-      caption: 'image-tool__caption',
-    };
-  }
 
-  /**
-   * Ui statuses:
-   * - empty
-   * - uploading
-   * - filled
-   *
-   * @returns {{EMPTY: string, UPLOADING: string, FILLED: string}}
-   */
-  static get status() {
-    return {
-      EMPTY: 'empty',
-      UPLOADING: 'loading',
-      FILLED: 'filled',
+      fileContainer: 'file-tool__file',
+      caption: 'file-tool__caption',
+      fileLink: 'file-tool__link',
+      fileButtonEditing: 'file-tool__button_editing',
+      fileButtonReadOnly: 'file-tool__button_read_only',
     };
   }
 
@@ -92,13 +80,7 @@ export default class Ui {
    * @param {FileToolData} toolData - saved tool data
    * @returns {Element}
    */
-  render(toolData) {
-    if (!toolData.file || Object.keys(toolData.file).length === 0) {
-      this.toggleStatus(Ui.status.EMPTY);
-    } else {
-      this.toggleStatus(Ui.status.UPLOADING);
-    }
-
+  render() {
     return this.nodes.wrapper;
   }
 
@@ -108,11 +90,15 @@ export default class Ui {
    * @returns {Element}
    */
   createFileButton() {
-    const button = make('div', [this.CSS.button]);
+    let cssClasses = this.readOnly
+      ? [this.CSS.button, this.CSS.fileButtonReadOnly]
+      : [this.CSS.button, this.CSS.fileButtonEditing];
+
+    const button = make('div', cssClasses);
 
     button.innerHTML =
       this.config.buttonContent ||
-      `${buttonIcon} ${this.api.i18n.t('Select an Image')}`;
+      `${buttonIcon} ${this.api.i18n.t('Select a File')}`;
 
     button.addEventListener('click', () => {
       this.onSelectFile();
@@ -122,97 +108,14 @@ export default class Ui {
   }
 
   /**
-   * Shows uploading preloader
-   *
-   * @param {string} src - preview source
-   * @returns {void}
-   */
-  showPreloader(src) {
-    this.nodes.imagePreloader.style.backgroundImage = `url(${src})`;
-
-    this.toggleStatus(Ui.status.UPLOADING);
-  }
-
-  /**
    * Hide uploading preloader
    *
    * @returns {void}
    */
-  hidePreloader() {
-    this.nodes.imagePreloader.style.backgroundImage = '';
-    this.toggleStatus(Ui.status.EMPTY);
-  }
-
-  /**
-   * Shows an image
-   *
-   * @param {string} url - image source
-   * @returns {void}
-   */
-  fillImage(url) {
-    /**
-     * Check for a source extension to compose element correctly: video tag for mp4, img — for others
-     */
-    const tag = /\.mp4$/.test(url) ? 'VIDEO' : 'IMG';
-
-    const attributes = {
-      src: url,
-    };
-
-    /**
-     * We use eventName variable because IMG and VIDEO tags have different event to be called on source load
-     * - IMG: load
-     * - VIDEO: loadeddata
-     *
-     * @type {string}
-     */
-    let eventName = 'load';
-
-    /**
-     * Update attributes and eventName if source is a mp4 video
-     */
-    if (tag === 'VIDEO') {
-      /**
-       * Add attributes for playing muted mp4 as a gif
-       *
-       * @type {boolean}
-       */
-      attributes.autoplay = true;
-      attributes.loop = true;
-      attributes.muted = true;
-      attributes.playsinline = true;
-
-      /**
-       * Change event to be listened
-       *
-       * @type {string}
-       */
-      eventName = 'loadeddata';
-    }
-
-    /**
-     * Compose tag with defined attributes
-     *
-     * @type {Element}
-     */
-    this.nodes.imageEl = make(tag, this.CSS.imageEl, attributes);
-
-    /**
-     * Add load event listener
-     */
-    this.nodes.imageEl.addEventListener(eventName, () => {
-      this.toggleStatus(Ui.status.FILLED);
-
-      /**
-       * Preloader does not exists on first rendering with presaved data
-       */
-      if (this.nodes.imagePreloader) {
-        this.nodes.imagePreloader.style.backgroundImage = '';
-      }
-    });
-
-    this.nodes.imageContainer.appendChild(this.nodes.imageEl);
-  }
+  // TODO: reenable for big files
+  // hidePreloader() {
+  //   this.nodes.imagePreloader.style.backgroundImage = '';
+  // }
 
   /**
    * Shows caption input
@@ -227,34 +130,31 @@ export default class Ui {
   }
 
   /**
-   * Changes UI status
+   * Shows the file link text
    *
-   * @param {string} status - see {@link Ui.status} constants
+   * @param {string} text - caption text
+   * @param {string} filename - name of attached file
+   * @param {string} url - download url for attached file
    * @returns {void}
    */
-  toggleStatus(status) {
-    for (const statusType in Ui.status) {
-      if (Object.prototype.hasOwnProperty.call(Ui.status, statusType)) {
-        this.nodes.wrapper.classList.toggle(
-          `${this.CSS.wrapper}--${Ui.status[statusType]}`,
-          status === Ui.status[statusType]
-        );
-      }
+  fillFileLink(text, filename, url) {
+    if (this.nodes.fileLink) {
+      this.nodes.fileLink.innerHTML = `${text} <a href="${url}" target="_blank">${filename}</a>`;
     }
   }
 
   /**
-   * Apply visual representation of activated tune
+   * Shows button text
    *
-   * @param {string} tuneName - one of available tunes {@link Tunes.tunes}
-   * @param {boolean} status - true for enable, false for disable
+   * @param {string} filename - name of attached file
    * @returns {void}
    */
-  applyTune(tuneName, status) {
-    this.nodes.wrapper.classList.toggle(
-      `${this.CSS.wrapper}--${tuneName}`,
-      status
-    );
+  fillButton(filename) {
+    if (this.nodes.fileButton) {
+      this.nodes.fileButton.innerHTML = filename
+        ? `<b>${filename}</b> (click to select a new file)`
+        : 'Select a File';
+    }
   }
 }
 

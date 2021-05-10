@@ -44,7 +44,6 @@
 // eslint-disable-next-line
 import css from './index.css';
 import Ui from './ui';
-import Tunes from './tunes';
 import ToolboxIcon from './svg/toolbox.svg';
 import Uploader from './uploader';
 
@@ -94,7 +93,7 @@ export default class FileTool {
   static get toolbox() {
     return {
       icon: ToolboxIcon,
-      title: 'Image',
+      title: 'File',
     };
   }
 
@@ -131,8 +130,8 @@ export default class FileTool {
      */
     this.uploader = new Uploader({
       config: this.config,
-      onUpload: (response) => this.onUpload(response),
-      onError: (error) => this.uploadingFailed(error),
+      onUpload: response => this.onUpload(response),
+      onError: error => this.uploadingFailed(error),
     });
 
     /**
@@ -143,21 +142,12 @@ export default class FileTool {
       config: this.config,
       onSelectFile: () => {
         this.uploader.uploadSelectedFile({
-          onPreview: (src) => {
-            this.ui.showPreloader(src);
+          onPreview: filename => {
+            this.ui.fillButton(filename);
           },
         });
       },
       readOnly,
-    });
-
-    /**
-     * Module for working with tunes
-     */
-    this.tunes = new Tunes({
-      api,
-      actions: this.config.actions,
-      onChange: (tuneName) => this.tuneToggled(tuneName),
     });
 
     /**
@@ -176,7 +166,7 @@ export default class FileTool {
    * @returns {HTMLDivElement}
    */
   render() {
-    const div = this.ui.render(this.data);
+    const div = this.ui.render();
 
     div.id = this._id;
 
@@ -196,17 +186,6 @@ export default class FileTool {
     this._data.caption = caption.innerHTML;
 
     return this.data;
-  }
-
-  /**
-   * Makes buttons with tunes: add background, add border, stretch image
-   *
-   * @public
-   *
-   * @returns {Element}
-   */
-  renderSettings() {
-    return this.tunes.render(this.data);
   }
 
   /**
@@ -306,17 +285,14 @@ export default class FileTool {
 
     this._data.caption = data.caption || '';
     this.ui.fillCaption(this._data.caption);
+    this.ui.fillFileLink(
+      this._data.caption,
+      this._data.file.filename,
+      this._data.file.url
+    );
+    this.ui.fillButton(this._data.file.filename);
 
     this._id = data.id;
-
-    Tunes.tunes.forEach(({ name: tune }) => {
-      const value =
-        typeof data[tune] !== 'undefined'
-          ? data[tune] === true || data[tune] === 'true'
-          : false;
-
-      this.setTune(tune, value);
-    });
   }
 
   /**
@@ -339,10 +315,6 @@ export default class FileTool {
    */
   set image(file) {
     this._data.file = file || {};
-
-    if (file && file.url) {
-      this.ui.fillImage(file.url);
-    }
   }
 
   /**
@@ -375,48 +347,8 @@ export default class FileTool {
       message: this.api.i18n.t('Couldn’t upload image. Please try another.'),
       style: 'error',
     });
-    this.ui.hidePreloader();
-  }
-
-  /**
-   * Callback fired when Block Tune is activated
-   *
-   * @private
-   *
-   * @param {string} tuneName - tune that has been clicked
-   * @returns {void}
-   */
-  tuneToggled(tuneName) {
-    // inverse tune state
-    this.setTune(tuneName, !this._data[tuneName]);
-  }
-
-  /**
-   * Set one tune
-   *
-   * @param {string} tuneName - {@link Tunes.tunes}
-   * @param {boolean} value - tune state
-   * @returns {void}
-   */
-  setTune(tuneName, value) {
-    this._data[tuneName] = value;
-
-    this.ui.applyTune(tuneName, value);
-
-    if (tuneName === 'stretched') {
-      /**
-       * Wait until the API is ready
-       */
-      Promise.resolve()
-        .then(() => {
-          const blockId = this.api.blocks.getCurrentBlockIndex();
-
-          this.api.blocks.stretchBlock(blockId, value);
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    }
+    // TODO: reenable for big files
+    // this.ui.hidePreloader();
   }
 
   /**
@@ -427,7 +359,7 @@ export default class FileTool {
    */
   uploadFile(file) {
     this.uploader.uploadByFile(file, {
-      onPreview: (src) => {
+      onPreview: src => {
         this.ui.showPreloader(src);
       },
     });
